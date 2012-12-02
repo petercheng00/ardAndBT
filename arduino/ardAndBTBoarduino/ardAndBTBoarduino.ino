@@ -1,9 +1,11 @@
-const int LED_PIN1 = 11;
-const int LED_PIN2 = 12;
-const int LED_PIN3 = 13;
+#include <SoftwareSerial.h>
 
-int IRledPin =  14;
-int signalLedPin = 15;
+
+int bluetoothTx = 2;
+int bluetoothRx = 3;
+
+int IRledPin =  10;
+int signalLedPin = 11;
 
 String currReading = "";
 boolean toggle1 = true;
@@ -12,30 +14,23 @@ boolean toggle3 = true;
 
 boolean debugLED = false;
 
-HardwareSerial bluetooth = HardwareSerial();
+SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
 void setup() {
     Serial.begin(9600);
     
-    bluetooth.begin(9600);
+    bluetooth.begin(115200);
     bluetooth.print("$$$");
     delay(100);
     bluetooth.println("U,9600,N");
     bluetooth.begin(9600);
-    pinMode(LED_PIN1, OUTPUT);
-    pinMode(LED_PIN2, OUTPUT);
-    pinMode(LED_PIN3, OUTPUT);
     pinMode(IRledPin, OUTPUT);
     pinMode(signalLedPin, OUTPUT);
-    digitalWrite(LED_PIN1, HIGH);
-    digitalWrite(LED_PIN2, HIGH);
-    digitalWrite(LED_PIN3, HIGH);
 }
 
 void loop() {
     if (bluetooth.available())
     {
-        flashSignal();
         currReading= bluetooth.readStringUntil('\n');
         Serial.println(currReading);
         unsigned int currentNum = 0;   
@@ -72,12 +67,7 @@ void sendSignal(unsigned int signal[], int size){
   //while(true){
   for(int i = 0; i < size; i++) {
     if(i % 2 == 0) {
-      //Serial.println("waiting for");]
-      if(signal[i] > 16000) {
-        delay(signal[i]/1000);
-      } else {
-        delayMicroseconds(signal[i]+30);
-      }
+        delayMicroseconds(signal[i]);
     } else {
       //Serial.println("pulsing for");
       pulseIR(signal[i]);
@@ -98,9 +88,9 @@ void pulseIR(long microsecs) {
   while (microsecs > 0) {
     // 38 kHz is about 13 microseconds high and 13 microseconds low
    digitalWrite(IRledPin, HIGH);  // this takes about 3 microseconds to happen
-   delayMicroseconds(14);         // hang out for 10 microseconds
+   delayMicroseconds(9);         // hang out for 10 microseconds
    digitalWrite(IRledPin, LOW);   // this also takes about 3 microseconds
-   delayMicroseconds(15);         // hang out for 10 microseconds
+   delayMicroseconds(9);         // hang out for 10 microseconds
  
    // so 26 microseconds altogether
    microsecs -= 26;
